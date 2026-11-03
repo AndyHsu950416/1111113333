@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>狐狸的森林冒險｜WebAR 生態互動教材</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<style>
+:root{--ink:#203a32;--green:#124c3d;--lime:#d6ecb6;--cream:#fffdf5;--orange:#ed873e}*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;color:var(--ink);background:#eaf4e9;overflow:hidden}
+.a-canvas{z-index:0!important}a-scene{position:fixed!important;inset:0!important;z-index:0!important}
+#top{position:fixed;top:0;left:0;right:0;z-index:12;padding:18px clamp(16px,4vw,40px);pointer-events:none;background:linear-gradient(#e9f5e9f5,#e9f5e900)}
+#brand{display:flex;align-items:center;gap:12px}#icon{font-size:29px;background:#fff;border-radius:15px;padding:9px;box-shadow:0 5px 20px #2b503420}
+#brand strong{display:block;font-size:clamp(17px,3vw,23px);letter-spacing:1px}#brand small{color:#557264;font-weight:600}
+#toolbar{position:fixed;top:95px;left:clamp(16px,4vw,40px);z-index:13;display:flex;gap:8px;flex-wrap:wrap;max-width:calc(100% - 32px)}
+button,.btn{font-family:inherit;cursor:pointer;border:0;border-radius:14px;padding:11px 15px;font-size:14px;font-weight:750;transition:transform .15s,background .15s;text-decoration:none}button:active,.btn:active{transform:scale(.97)}
+.primary{background:var(--green);color:#fff;box-shadow:0 4px 16px #114e3e33}.secondary{background:#fffcf2;color:#224b3e;border:1px solid #cbded0}
+#card{position:fixed;bottom:20px;left:clamp(14px,4vw,40px);width:min(400px,calc(100% - 28px));z-index:13;background:#fffdf6ed;backdrop-filter:blur(16px);border:1px solid #fff;border-radius:22px;padding:18px 20px;box-shadow:0 12px 45px #224f3f2d;max-height:45vh;overflow:auto}
+.badge{display:inline-flex;gap:5px;align-items:center;padding:5px 9px;border-radius:50px;background:#e6f3d9;color:#35633d;font-size:11px;font-weight:800;letter-spacing:1px}
+h2{font-size:23px;margin:10px 0 8px}p{font-size:13px;line-height:1.8;margin:0;color:#52695f}.facts{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.fact{background:#f4eee0;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:700}
+#status{position:fixed;top:146px;left:clamp(16px,4vw,40px);z-index:12;font-size:12px;color:#486456;background:#ffffffcd;padding:8px 11px;border-radius:12px}
+#quiz{display:none;position:fixed;inset:0;background:#173c30a8;z-index:30;align-items:center;justify-content:center;padding:20px}
+#quiz.open{display:flex}.quizbox{background:#fffdf6;border-radius:24px;width:min(440px,100%);padding:26px;box-shadow:0 20px 80px #0e2a2250}.quizbox h3{margin:8px 0 18px;font-size:22px}.choice{display:block;width:100%;text-align:left;margin:8px 0;background:#edf5e8;color:#234638;border:1px solid #d6e6d8}.choice.good{background:#c9eccf}.choice.bad{background:#ffdccc}#result{margin:12px 0;min-height:23px;font-weight:700;color:#2e6342}
+#hint{position:fixed;right:18px;bottom:20px;z-index:11;font-size:12px;color:#5c796b;text-align:right;max-width:160px}
+body.ar #top{background:linear-gradient(#f5fbf9c9,#f5fbf900)}body.ar #card{background:#fffdf4ee}body.ar #hint{color:white;text-shadow:0 1px 5px black}
+@media(max-width:600px){#top{padding:12px 14px}#toolbar{top:74px;left:13px}#status{top:126px;left:13px}#card{padding:14px 16px;max-height:36vh;bottom:10px}#hint{display:none}button,.btn{font-size:12px;padding:9px 11px}h2{font-size:20px}}
+</style>
+</head>
+<body>
+<header id="top"><div id="brand"><span id="icon">🦊</span><div><strong>狐狸的森林冒險</strong><small>互動教材設計與實習｜WebAR 生態探索</small></div></div></header>
+<div id="toolbar"><button class="primary" id="switchMode">📷 開啟 AR 掃描</button><button class="secondary" id="wave">🦊 讓狐狸搖尾巴</button><button class="secondary" id="quizBtn">🌿 生態小測驗</button><a class="btn secondary" href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png" target="_blank" rel="noopener">▣ 下載辨識圖卡</a></div>
+<div id="status" role="status">載入 3D 狐狸中…</div>
+<section id="card"><div class="badge">✦ 生態知識卡 · 01</div><h2>認識赤狐 Red Fox</h2><p>赤狐（<i>Vulpes vulpes</i>）具有尖尖的耳朵、橘紅色的毛皮和蓬鬆的尾巴。牠們主要在晨昏活動，食物包含小型哺乳動物、鳥類、昆蟲與果實。</p><div class="facts"><span class="fact">🦊 哺乳類</span><span class="fact">🌙 晨昏活動</span><span class="fact">🍓 雜食性</span></div></section>
+<div id="hint">桌面預覽：拖曳旋轉狐狸<br>手機 AR：對準 Hiro 圖卡</div>
+<div id="quiz" aria-modal="true" role="dialog" aria-label="赤狐生態小測驗"><div class="quizbox"><div class="badge">🌳 知識挑戰</div><h3>狐狸通常吃什麼食物？</h3><button class="choice" data-ok="0">A. 只吃竹子</button><button class="choice" data-ok="1">B. 小動物、昆蟲和果實</button><button class="choice" data-ok="0">C. 只吃海藻</button><div id="result"></div><button class="primary" id="closeQuiz">完成並返回 🦊</button></div></div>
+<div id="sceneRoot"></div>
+<script>
+const isAR=new URLSearchParams(location.search).get('mode')==='ar';
+if(isAR)document.body.classList.add('ar');
+const statusEl=document.getElementById('status');
+const fox=`
+<a-entity id="fox" position="0 0 0" rotation="0 0 0">
+ <a-entity id="foxbody" position="0 0.53 0">
+  <a-sphere position="0 0.08 0.02" scale="0.33 0.32 0.47" color="#d96d2e" roughness="1"></a-sphere>
+  <a-sphere position="0 -0.055 -0.19" scale="0.255 0.245 0.24" color="#f3e5cf"></a-sphere>
+  <a-sphere position="0 -0.08 0.33" scale="0.23 0.20 0.11" color="#f2e2cf"></a-sphere>
+  <a-entity position="0 0.27 0.30" rotation="-7 0 0">
+   <a-sphere position="0 0 0" scale="0.295 0.265 0.275" color="#e98037"></a-sphere>
+   <a-cone position="-0.17 0.285 -0.015" radius-bottom="0.115" radius-top="0" height="0.33" rotation="0 0 12" color="#cf622d"></a-cone>
+   <a-cone position="0.17 0.285 -0.015" radius-bottom="0.115" radius-top="0" height="0.33" rotation="0 0 -12" color="#cf622d"></a-cone>
+   <a-cone position="-0.17 0.298 0.051" radius-bottom="0.062" radius-top="0" height="0.228" rotation="0 0 12" color="#ffbead"></a-cone>
+   <a-cone position="0.17 0.298 0.051" radius-bottom="0.062" radius-top="0" height="0.228" rotation="0 0 -12" color="#ffbead"></a-cone>
+   <a-sphere position="-0.133 0.015 0.220" scale="0.092 0.107 0.044" color="#ffeddb"></a-sphere>
+   <a-sphere position="0.133 0.015 0.220" scale="0.092 0.107 0.044" color="#ffeddb"></a-sphere>
+   <a-sphere position="-0.120 0.042 0.261" scale="0.029 0.039 0.022" color="#212a24"></a-sphere>
+   <a-sphere position="0.120 0.042 0.261" scale="0.029 0.039 0.022" color="#212a24"></a-sphere>
+   <a-cone position="0 -0.109 0.287" rotation="90 0 0" radius-bottom="0.18" radius-top="0.015" height="0.27" color="#fff1e3"></a-cone>
+   <a-sphere position="0 -0.110 0.431" scale="0.060 0.038 0.041" color="#252f2c"></a-sphere>
+  </a-entity>
+  <a-entity id="tail" position="0 0.10 -0.40" rotation="-22 0 0">
+   <a-cone position="0 0.16 -0.28" rotation="-77 0 0" radius-bottom="0.20" radius-top="0.06" height="0.63" color="#e48036"></a-cone>
+   <a-cone position="0 0.29 -0.57" rotation="103 0 0" radius-bottom="0.12" radius-top="0.015" height="0.24" color="#fff6df"></a-cone>
+  </a-entity>
+ </a-entity>
+ <a-entity position="-0.21 0.21 0.27"><a-cylinder radius="0.068" height="0.39" color="#a34b2b"></a-cylinder><a-sphere position="0 -0.19 0.05" scale="0.09 0.055 0.12" color="#362b26"></a-sphere></a-entity>
+ <a-entity position="0.21 0.21 0.27"><a-cylinder radius="0.068" height="0.39" color="#a34b2b"></a-cylinder><a-sphere position="0 -0.19 0.05" scale="0.09 0.055 0.12" color="#362b26"></a-sphere></a-entity>
+ <a-entity position="-0.20 0.21 -0.30"><a-cylinder radius="0.073" height="0.37" color="#b65929"></a-cylinder><a-sphere position="0 -0.19 0.04" scale="0.10 0.055 0.13" color="#392921"></a-sphere></a-entity>
+ <a-entity position="0.20 0.21 -0.30"><a-cylinder radius="0.073" height="0.37" color="#b65929"></a-cylinder><a-sphere position="0 -0.19 0.04" scale="0.10 0.055 0.13" color="#392921"></a-sphere></a-entity>
+</a-entity>`;
+const root=document.getElementById('sceneRoot');
+if(isAR){
+ document.getElementById('switchMode').textContent='🖥️ 返回 3D 預覽';
+ root.innerHTML=`<a-scene embedded vr-mode-ui="enabled:false" renderer="logarithmicDepthBuffer:true; colorManagement:true;" arjs="sourceType:webcam; debugUIEnabled:false; trackingMethod:best;" device-orientation-permission-ui="enabled:false"><a-marker preset="hiro" id="hiro" emitevents="true"><a-entity scale="0.65 0.65 0.65" position="0 0 0">${fox}</a-entity></a-marker><a-entity camera></a-entity></a-scene>`;
+ statusEl.textContent='請允許相機權限，並將鏡頭對準 Hiro 圖卡';
+ const marker=document.getElementById('hiro');marker.addEventListener('markerFound',()=>statusEl.textContent='✅ 已辨識圖卡！狐狸出現了');marker.addEventListener('markerLost',()=>statusEl.textContent='🔍 請將鏡頭重新對準 Hiro 圖卡');
+}else{
+ root.innerHTML=`<a-scene embedded vr-mode-ui="enabled:false" renderer="colorManagement:true; antialias:true;" background="color:#eaf4e9"><a-entity id="turntable" position="0 0 -3.8"><a-cylinder position="0 -0.07 0" radius="1.12" height="0.13" color="#b7d4ad"></a-cylinder><a-cylinder position="0 -0.17 0" radius="1.19" height="0.10" color="#658e6f"></a-cylinder><a-entity id="foxcontainer" scale="1.35 1.35 1.35" rotation="0 -20 0">${fox}</a-entity></a-entity><a-entity light="type:ambient; intensity:1.3"></a-entity><a-entity light="type:directional; intensity:1.1" position="-2 4 3"></a-entity><a-entity camera position="0 1.25 0" look-controls="enabled:false"></a-entity></a-scene>`;
+ statusEl.textContent='✅ 3D 狐狸預覽模式 · 可拖曳轉動';
+ let dragging=false,lastX=0;window.addEventListener('pointerdown',e=>{if(e.target.tagName==='CANVAS'){dragging=true;lastX=e.clientX}});window.addEventListener('pointerup',()=>dragging=false);window.addEventListener('pointermove',e=>{if(dragging){const a=document.getElementById('foxcontainer');if(a){a.object3D.rotation.y+=(e.clientX-lastX)*.008;lastX=e.clientX}}});
+}
+document.getElementById('switchMode').onclick=()=>{location.search=isAR?'':'?mode=ar'};
+document.getElementById('wave').onclick=()=>{const t=document.querySelector('#tail');if(!t)return;t.removeAttribute('animation__wag');t.setAttribute('animation__wag','property:rotation; from:-22 -30 0; to:-22 30 0; dir:alternate; dur:230; loop:8; easing:easeInOutSine');statusEl.textContent='🦊 狐狸正在開心地搖尾巴！'};
+document.getElementById('quizBtn').onclick=()=>document.getElementById('quiz').classList.add('open');
+document.getElementById('closeQuiz').onclick=()=>document.getElementById('quiz').classList.remove('open');
+document.querySelectorAll('.choice').forEach(el=>el.onclick=()=>{document.querySelectorAll('.choice').forEach(x=>x.classList.remove('good','bad'));let good=el.dataset.ok==='1';el.classList.add(good?'good':'bad');document.getElementById('result').textContent=good?'🎉 答對了！赤狐是雜食性動物。':'再想想！赤狐會吃小動物，也會吃植物性食物。'});
+</script>
+</body></html>
